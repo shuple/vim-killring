@@ -11,17 +11,11 @@ let s:killRingSize = 30
 " killRing offsets
 let s:offset = { 'push': 0, 'pop': 0, 'reset': 0 }
 
-" flags
-let s:flag = { 'pastedOnEOL': 0 }
-
-" length of line to be pasted
-let s:pasteOnLineLen = 0
-
 " cursor column
-let s:col = { 'insert': 0, 'normal': 0, 'end': 0 }
+let s:col = { 'end': 0, 'insert': 0, 'normal': 0 }
 
-" previous cursor position
-let s:cursor = []
+" cursor position
+let s:cursor = { 'insert': [], 'insertLeavePre': [], 'normal': [] }
 
 " push register to s:killRing, rotate when it reaches s:killRingSize
 "
@@ -61,33 +55,24 @@ endfunction
 " offset : +1 (forward) or -1 (backward)
 "
 function! s:RotateKillRing(offset)
-  let s:col = {}
+  " cursor column on insert mode
+  let s:col['insert'] = s:cursor['insertLeavePre'][2]
 
-  " column in normal mode
+  " cursor column on normal mode
   let s:col['normal'] = col('.')
-
-  " column at the end of the line
-  let s:col['end'] = col('$') - 1
-
-  " move cursor to where it was in insert mode
-  execute 'normal! `^'
-
-  " column in insert mode
-  let s:col['insert'] = s:col['normal'] + s:col['normal'] - col('.')
 
   " go back to insert mode if s:killRing is empty
   if empty(s:killRing)
-    " append if normal mode col is at the end of the line;
-    " otherwise, insert
-    let c = (s:col['insert'] == s:col['normal'] && s:col['insert'] == s:col['end']) ? 'a' : 'i'
-    call feedkeys(c, 'n')
+    " insert if insert and normal mode column is equal;
+    " otherwise, append
+    call feedkeys((s:col['insert'] == s:col['normal'] ? 'i' : 'a'), 'n')
     return
   endif
 
-  call s:Undo()
+  " column on end of line
+  let s:col['end'] = col('$')
 
-  " flag paste on empty line
-  let s:pasteOnLineLen = col('$')
+  call s:Undo()
 
   " restore original register later
   let l:saved_register = getreg('"')
@@ -104,21 +89,20 @@ function! s:RotateKillRing(offset)
 
   " restore register
   call setreg('"', l:saved_register)
-
-  " flag pasted on EOL
-  let s:flag['pastedOnEOL'] = s:col['insert'] == s:col['normal']
 endfunction
 
 " replace the pasted text with an earlier batch of yanked text
 "
 function! s:Undo()
-  if empty(s:cursor)
-    let s:cursor = getpos('.')
+  if empty(s:cursor['normal'])
+    let s:cursor['normal'] = getpos('.')
+    let s:cursor['insert'] = s:cursor['insertLeavePre']
   else
     if s:RequireUndo()
       undo
     else
-      let s:cursor = getpos('.')
+      let s:cursor['normal'] = getpos('.')
+      let s:cursor['insert'] = s:cursor['insertLeavePre']
       let s:offset['reset'] = 1
     endif
   endif
@@ -129,35 +113,10 @@ endfunction
 "
 function! s:RequireUndo()
   let l:cursor = getpos('.')
-
-  " insert mode and normal mode column offset
-  let l:offset = s:col['normal'] - s:col['insert']
-
-  " do not undo when current and previous cursor is in the same position
-  if l:cursor == s:cursor | return 0 | endif
-
-  " do not undo when current and previous cursor is at the beginning of the line
-  if l:cursor[2] == 1 && s:cursor[2] == 1 | return 0 | endif
-
-  " do not undo if previously pasted on EOL and insert mode cusor is on EOL
-  if s:flag['pastedOnEOL'] == 0 && l:offset == 0 | return 0 | endif
-
-  let l:len = 0
-  let l:buf = split(s:killRing[s:offset['pop']], '\n')
-  for b in l:buf | let l:len += len(b) | endfor
-
-  " l:len - 1 when cursor is at the beginning of the line
-  if ((l:cursor[2] - l:len < 1) || (l:cursor[2] - l:len == 1 && l:offset == 0)) &&
-    \ (s:pasteOnLineLen != 2) | let l:len -= 1 | endif
-
-  " multi-line l:buf requires additional l:len handling
-  if len(l:buf) > 1
-    let l:len = l:len + len(l:buf) - 1
-    if (s:pasteOnLineLen == 1 || s:pasteOnLineLen == 2) | let l:len -= 1 | endif
-  endif
+  let l:len = s:GetBufLen()
 
   " set cursor to paste point and move l:len times to the right
-  call setpos('.', s:cursor)
+  call setpos('.', s:cursor['normal'])
   execute 'normal! ' . l:len . 'l'
 
   " set l:undo to 1 if user did not move the cursor from the paste point,
@@ -168,6 +127,18 @@ function! s:RequireUndo()
   call setpos('.', l:cursor)
 
   return l:undo
+endfunction
+
+" length of s:killRing[s:offset['pop'] in normal mode
+"
+function! s:GetBufLen()
+  let l:len = 0
+  let l:buf = split(s:killRing[s:offset['pop']], '\n')
+  for l:b in l:buf | let l:len += len(l:b) | endfor
+
+  if s:cursor['insert'] == s:cursor['normal'] | let l:len -= 1 | endif
+
+  return l:len
 endfunction
 
 " set s:offset['reset'] and s:offset['pop']
@@ -190,19 +161,26 @@ endfunction
 " paste register and go back to insert mode
 "
 function! s:Paste()
-  " default paste and insert command
-  let l:paste = 'P'
-  let l:insert = 'i'
-
-  " char on insert mode cursor
-  let l:c = matchstr(getline('.'), '\%' . s:col['insert'] . 'c.')
-
-  " paste and insert command depends on the following conditions
-  if (s:col['insert'] == s:col['normal']) &&
-    \ (l:c == '' || s:col['insert'] > 1 && s:col['insert'] == s:col['end'] || col('$') == 2)
-    let l:paste = 'p'
-    let l:insert = 'a'
+  " paste before the cursor if column is at the start or the end of line
+  " otherwise, paste after the cursor
+  let l:buf = split(s:killRing[s:offset['pop']], '\n')
+  let l:len = len(l:buf[0])
+  if len(l:buf) < 2
+    let l:paste =
+      \ (s:col['insert'] == 1 && s:col['normal'] == 1) ||
+      \ (s:col['insert'] - l:len == 1) || (col('$') == 2) ?
+      \ 'P' : 'p'
+  else
+    let l:paste =
+      \ (s:col['insert'] == 1 && s:col['normal'] == 1) ||
+      \ (s:col['end'] - l:len - 1 == s:col['normal']) || (col('$') == 2)
+      \ ? 'P' : 'p'
   endif
+
+  " append if cursor is on the start or the end of line;
+  " otherwise, insert
+  let l:insert =
+    \ (s:col['insert'] == s:col['normal'] && s:col['insert'] > 1) || s:col['insert'] == s:col['end'] ? 'a' : 'i'
 
   execute 'normal! g' . l:paste
   call feedkeys(l:insert, 'n')
@@ -214,7 +192,7 @@ function! BackwardKillWord()
   " move cursor to where it was in insert mode
   execute 'normal! `^'
 
-  " use 'vd' if cursor is at the beginning of the line;
+  " use 'vd' if cursor is on the start of line;
   " otherwise, use 'dvb'
   let c = col('.') == 1 ? 'vb' : 'dvb'
   call s:Kill(c)
@@ -235,7 +213,7 @@ function! ForwardKillWord()
   call feedkeys('i', 'n')
 endfunction
 
-" restore regsiter after pushiing deleted text to s:killRing
+" restore regsiter after pushing deleted text to s:killRing
 "
 function! s:Kill(c)
   let l:saved_register = getreg('"')
@@ -272,10 +250,11 @@ function! GetKillRingSize()
 endfunction
 
 " autocommand
-if exists('##TextYankPost')
+if exists('##InsertLeavePre') && exists('##TextYankPost')
   augroup kill_ring_group
     autocmd!
     autocmd TextYankPost * call s:PushKillRing(v:register)
+    autocmd InsertLeavePre * let s:cursor['insertLeavePre'] = getpos('.')
   augroup END
 endif
 
