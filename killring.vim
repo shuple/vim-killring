@@ -168,12 +168,14 @@ function! s:Paste()
   if len(l:buf) < 2
     let l:paste =
       \ (s:col['insert'] == 1 && s:col['normal'] == 1) ||
-      \ (s:col['insert'] - l:len == 1) || (col('$') == 2) ?
-      \ 'P' : 'p'
+      \ (s:col['insert'] - l:len == 1)
+      \ ? 'P' : 'p'
   else
     let l:paste =
       \ (s:col['insert'] == 1 && s:col['normal'] == 1) ||
-      \ (s:col['end'] - l:len - 1 == s:col['normal']) || (col('$') == 2)
+      \ (s:col['end'] - l:len - 1 == s:col['normal']) ||
+      \ (s:cursor['insert'][2] == 1 && s:cursor['normal'][2] == 1) ||
+      \ (s:cursor['insert'][2] == 1 && col('$') == 2)
       \ ? 'P' : 'p'
   endif
 
