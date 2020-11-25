@@ -209,7 +209,7 @@ function! ForwardKillWord()
   " move cursor to where it was in insert mode
   execute 'normal! `^'
 
-  call s:Kill(c . 'de')
+  call s:Kill('de')
 
   " go back to insert mode
   call feedkeys('i', 'n')
