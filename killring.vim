@@ -215,8 +215,12 @@ function! ForwardKillWord()
 
   call s:Kill('de')
 
+  " append if cursor is on the end of line;
+  " otherwise insert
+  let l:insert = col('.') == col('$') - 1 ? 'a' : 'i'
+
   " go back to insert mode
-  call feedkeys('i', 'n')
+  call feedkeys(l:insert, 'n')
 endfunction
 
 " restore regsiter after pushing deleted text to s:killRing
