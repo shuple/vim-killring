@@ -6,7 +6,7 @@
 let s:killRing = []
 
 " killRing size
-let s:killRingSize = 30
+let g:killRingSize = 30
 
 " killRing offsets
 let s:offset = { 'push': 0, 'pop': 0, 'reset': 0 }
@@ -17,7 +17,7 @@ let s:col = { 'end': 0, 'insert': 0, 'normal': 0 }
 " cursor position
 let s:cursor = { 'insert': [], 'insertLeavePre': [], 'normal': [] }
 
-" push register to s:killRing, rotate when it reaches s:killRingSize
+" push register to s:killRing, rotate when it reaches g:killRingSize
 "
 " register : register name
 "
@@ -28,11 +28,11 @@ function! s:PushKillRing(register)
   if len(l:register) < 2 | return | endif
   " do not push  consecutive texts with same value
   if len(s:killRing) > 0 && l:register == s:killRing[s:offset['push']] | return | endif
-  if len(s:killRing) < s:killRingSize
+  if len(s:killRing) < g:killRingSize
     call add(s:killRing, l:register)
     let s:offset['push'] = len(s:killRing) - 1
   else
-    let s:offset['push'] = (s:offset['push'] + 1) % s:killRingSize
+    let s:offset['push'] = (s:offset['push'] + 1) % g:killRingSize
     let s:killRing[s:offset['push']] = l:register
   endif
   let s:offset['reset'] = 1
@@ -231,12 +231,12 @@ function! s:Kill(c)
   call setreg('"', l:saved_register)
 endfunction
 
-" set s:killRingSize
+" set g:killRingSize
 "
-" killRingSize : desired value for s:killRingSize in int
+" killRingSize : desired value for g:killRingSize in int
 "
 function! SetKillRingSize(killRingSize)
-  let s:killRingSize = a:killRingSize
+  let g:killRingSize = a:killRingSize
   " if s:killRing shrank
   if a:killRingSize < len(s:killRing)
     let l:reduceSize = a:killRingSize - 1
@@ -253,10 +253,10 @@ function! BrowseKillRing()
   echo reverse(s:killRing)
 endfunction
 
-" echo s:killRingSize
+" echo g:killRingSize
 "
 function! GetKillRingSize()
-  echo s:killRingSize
+  echo g:killRingSize
 endfunction
 
 " autocommand
