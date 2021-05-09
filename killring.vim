@@ -149,7 +149,7 @@ endfunction
 function! s:SetPopOffset(position, offset)
   if s:offset['reset']
     let s:offset['reset'] = 0
-    let s:offset['pop'] = s:offset['push']
+    let s:offset['pop'] = a:offset == 1 ? 0 : s:offset['push']
   else
     let l:position = a:position + a:offset
     if l:position < 0 | let l:position += len(s:killRing) | endif
