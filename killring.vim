@@ -167,9 +167,7 @@ function! s:Paste()
   let l:len = len(l:buf[0])
   if len(l:buf) < 2
     let l:paste =
-      \ (s:col['insert'] == 1 && s:col['normal'] == 1) ||
-      \ (s:col['insert'] - l:len == 1)
-      \ ? 'P' : 'p'
+      \ (s:col['insert'] == 1 && s:col['normal'] == 1) ? 'P' : 'p'
   else
     let l:paste =
       \ (s:col['insert'] == 1 && s:col['normal'] == 1) ||
