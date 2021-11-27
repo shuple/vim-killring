@@ -1,6 +1,6 @@
 " killring.vim - Mimics the Emacs Kill Ring
 
-" version 0.1b
+" version 0.1a
 
 " init killRing
 let s:killRing = []

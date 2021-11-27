@@ -71,5 +71,5 @@ Set Kill Ring size.
 ```
 
 ## Changelog
-##### 0.1b (2020-10-31)
-- Initial Beta Release.
+##### 0.1a (2020-10-31)
+- Initial Alpha Release.
