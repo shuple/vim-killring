@@ -2,6 +2,9 @@
 
 " version 0.1a
 
+" bool to indicate that killring is available
+let g:killRingPlugin = 1
+
 " init killRing
 let s:killRing = []
 
