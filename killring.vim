@@ -58,11 +58,15 @@ endfunction
 " offset : +1 (forward) or -1 (backward)
 "
 function! s:RotateKillRing(offset)
-  " cursor column on insert mode
-  let s:col['insert'] = s:cursor['insertLeavePre'][2]
+  if s:offset['reset'] == 0 && s:col['insert'] == 1
+    " do not alter s:col when rotating kill ring at the beginning of the line
+  else
+    " cursor column on insert mode
+    let s:col['insert'] = s:cursor['insertLeavePre'][2]
 
-  " cursor column on normal mode
-  let s:col['normal'] = col('.')
+    " cursor column on normal mode
+    let s:col['normal'] = col('.')
+  endif
 
   " go back to insert mode if s:killRing is empty
   if empty(s:killRing)
