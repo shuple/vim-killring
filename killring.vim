@@ -192,17 +192,20 @@ endfunction
 " mimic emacs backward-kill-word
 "
 function! BackwardKillWord()
-  " return if insert mode cursor is at the beginning of the line
-  if s:cursor['insertLeavePre'][2] == 1 | call feedkeys('i', 'n') | return | endif
+  " delete a character if the insert mode cursor is at the beginning of the line
+  if s:cursor['insertLeavePre'][2] == 1
+    execute "normal! i\<bs>"
+    let l:insert = 'a'
+  else
+    " use 'vd' if cursor is on the start of line;
+    " otherwise, use 'dvb'
+    let c = col('.') == 1 ? 'x' : 'dvb'
+    call s:Kill(c)
 
-  " use 'vd' if cursor is on the start of line;
-  " otherwise, use 'dvb'
-  let c = col('.') == 1 ? 'x' : 'dvb'
-  call s:Kill(c)
-
-  " append if cursor is not on the beginning of line and cursor is on space;
-  " otherwise, insert
-  let l:insert = col('.') > 1 && matchstr(getline('.'), '\%' . (col('.')) . 'c.') == ' ' ? 'a' : 'i'
+    " append if cursor is not on the beginning of line and cursor is on space;
+    " otherwise, insert
+    let l:insert = col('.') > 1 && matchstr(getline('.'), '\%' . (col('.')) . 'c.') == ' ' ? 'a' : 'i'
+  endif
 
   " go back to insert mode
   call feedkeys(l:insert, 'n')
