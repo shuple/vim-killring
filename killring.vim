@@ -206,8 +206,8 @@ function! BackwardKillWord()
     let c = col('.') == 1 ? 'x' : 'dvb'
     call s:Kill(c)
 
-    " insert if cursor is at the end of the line, otherwise insert
-    let l:insert = col('.') == col('$') - 1 ? 'a' : 'i'
+    " append if cursor is at the end of the line, otherwise insert
+    let l:insert = col('.') == col('$') ? 'a' : 'i'
   endif
 
   " go back to insert mode
