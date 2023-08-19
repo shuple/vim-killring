@@ -207,11 +207,26 @@ function! BackwardKillWord()
     call s:Kill(c)
 
     " append if cursor is at the end of the line, otherwise insert
-    let l:insert = col('.') == col('$') - 1 ? 'a' : 'i'
+    let l:insert = col('.') == col('$') - 1 && NextChar() == '' ? 'a' : 'i'
   endif
 
   " go back to insert mode
   call feedkeys(l:insert, 'n')
+endfunction
+
+" return character immediately to the right of the cursor
+"
+function! NextChar()
+  let cursor_row = line('.')
+  let cursor_col = col('.')
+  let current_line = getline(cursor_row)
+  let next_char_col = cursor_col + 1
+
+  if next_char_col <= len(current_line)
+      let next_char = current_line[next_char_col - 1]
+      return next_char
+  endif
+  return ''
 endfunction
 
 " mimic emacs kill-word
