@@ -201,13 +201,15 @@ function! BackwardKillWord()
     execute "normal! i\<bs>"
     let l:insert = 'a'
   else
+    let l:is_at_end_of_line = col('.') >= len(getline('.'))
+
     " use 'vd' if cursor is on the start of line;
     " otherwise, use 'dvb'
     let c = col('.') == 1 ? 'x' : 'dvb'
     call s:Kill(c)
 
     " append if cursor is at the end of the line, otherwise insert
-    let l:insert = col('.') == col('$') - 1 && NextChar() == '' ? 'a' : 'i'
+    let l:insert = l:is_at_end_of_line ? 'a' : 'i'
   endif
 
   " go back to insert mode
