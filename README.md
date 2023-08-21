@@ -10,9 +10,7 @@ The following commands return 1 if the auto command is available; otherwise, it 
 
 ```vim
 :echo exists('##InsertLeavePre')
-1
 :echo exists('##TextYankPost')
-1
 ```
 
 ## Installation
@@ -62,7 +60,6 @@ inoremap <silent> <m-d> <esc>:call ForwardKillWord()<cr>
 Browse the Kill Ring.
 ```vim
 :call BrowseKillRing()
-['emacs', 'neovim', 'vim']
 ```
 
 Set Kill Ring size.
