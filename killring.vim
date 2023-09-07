@@ -216,21 +216,6 @@ function! BackwardKillWord()
   call feedkeys(l:insert, 'n')
 endfunction
 
-" return character immediately to the right of the cursor
-"
-function! NextChar()
-  let cursor_row = line('.')
-  let cursor_col = col('.')
-  let current_line = getline(cursor_row)
-  let next_char_col = cursor_col + 1
-
-  if next_char_col <= len(current_line)
-      let next_char = current_line[next_char_col - 1]
-      return next_char
-  endif
-  return ''
-endfunction
-
 " mimic emacs kill-word
 "
 function! ForwardKillWord()
