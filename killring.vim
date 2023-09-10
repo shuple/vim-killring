@@ -184,11 +184,11 @@ function! s:Paste()
       \ ? 'P' : 'p'
   endif
 
-  " append if cursor is on the start or the end of line;
-  " otherwise, insert
+  " condition for append or insert
   let l:insert =
     \ (s:col['insert'] == s:col['normal'] && s:col['insert'] > 1) ||
-    \ (s:col['insert'] == s:col['end'] || empty(getline('.')))
+    \ s:col['insert'] == s:col['end'] ||
+    \ empty(getline('.'))
     \ ? 'a' : 'i'
 
   execute 'normal! g' . l:paste
