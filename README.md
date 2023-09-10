@@ -57,15 +57,26 @@ inoremap <silent> <m-d> <esc>:call ForwardKillWord()<cr>
 ```
 
 ## Function
-Browse the Kill Ring.
+Browse Kill Ring.
 ```vim
 :call BrowseKillRing()
 ```
+<pre>
+['vi ', 'nvim ', 'emacs']
+</pre>
 
 Set Kill Ring size.
 ```vim
 :call SetKillRingSize(30)
 ```
+
+Get Kill Ring size.
+```vim
+:call GetKillRingSize()
+```
+<pre>
+30
+</pre>
 
 ## Changelog
 ##### 0.1a (2020-10-31)
