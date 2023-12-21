@@ -21,9 +21,8 @@ let s:col = { 'end': 0, 'insert': 0, 'normal': 0 }
 let s:cursor = { 'insert': [], 'insertLeavePre': [], 'normal': [] }
 
 " push register to s:killRing, rotate when it reaches g:killRingSize
-"
-" register : register name
-"
+" params:
+"   register: register name
 function! s:PushKillRing(register)
   let l:register = getreg(a:register)
   let l:register = substitute(l:register, '\n\+$', '', '')
@@ -42,21 +41,18 @@ function! s:PushKillRing(register)
 endfunction
 
 " pop s:killRing
-"
 function! PopKillRing()
   call s:RotateKillRing(-1)
 endfunction
 
 " shift s:killRing
-"
 function! ShiftKillRing()
   call s:RotateKillRing(1)
 endfunction
 
 " rotate element from s:killRing
-"
-" offset : +1 (forward) or -1 (backward)
-"
+" params:
+"   offset: +1 (forward) or -1 (backward)
 function! s:RotateKillRing(offset)
   if s:offset['reset'] == 0 && s:col['insert'] == 1
     " do not alter s:col when rotating kill ring at the beginning of the line
@@ -99,7 +95,6 @@ function! s:RotateKillRing(offset)
 endfunction
 
 " replace the pasted text with an earlier batch of yanked text
-"
 function! s:Undo()
   if empty(s:cursor['normal'])
     let s:cursor['normal'] = getpos('.')
@@ -115,9 +110,10 @@ function! s:Undo()
   endif
 endfunction
 
-" return 1 if user did not move the cursor from the paste point;
-" otherwise, return 0
-"
+" determines if the cursor has moved from a specific paste point
+" returns:
+"   0: the cursor has moved from the paste point
+"   1: the cursor has not moved from the paste point
 function! s:RequireUndo()
   let l:cursor = getpos('.')
   let l:len = s:GetBufLen()
@@ -137,7 +133,8 @@ function! s:RequireUndo()
 endfunction
 
 " length of s:killRing[s:offset['pop'] in normal mode
-"
+" returns:
+"   integer: the total number of characters in the string at s:killRing[s:offset['pop']]
 function! s:GetBufLen()
   let l:len = 0
   let l:buf = split(s:killRing[s:offset['pop']], '\n')
@@ -149,10 +146,9 @@ function! s:GetBufLen()
 endfunction
 
 " set s:offset['reset'] and s:offset['pop']
-"
-" position : current offset of s:killRingPop
-" offset   : +1 (forward) or -1 (backward)
-"
+" params:
+"   position: current offset of s:killRingPop
+"   offset  : +1 (forward) or -1 (backward)
 function! s:SetPopOffset(position, offset)
   if s:offset['reset']
     let s:offset['reset'] = 0
@@ -166,7 +162,6 @@ function! s:SetPopOffset(position, offset)
 endfunction
 
 " paste register and go back to insert mode
-"
 function! s:Paste()
   " paste before the cursor if column is at the start or the end of line
   " otherwise, paste after the cursor
@@ -196,7 +191,6 @@ function! s:Paste()
 endfunction
 
 " mimic emacs backward-kill-word
-"
 function! BackwardKillWord()
   " delete a character if the insert mode cursor is at the beginning of the line
   if s:cursor['insertLeavePre'][2] == 1
@@ -219,7 +213,6 @@ function! BackwardKillWord()
 endfunction
 
 " mimic emacs kill-word
-"
 function! ForwardKillWord()
   " move cursor to where it was in insert mode
   execute 'normal! `^'
@@ -235,7 +228,8 @@ function! ForwardKillWord()
 endfunction
 
 " restore regsiter after pushing deleted text to s:killRing
-"
+" params:
+"   c: a string representing a command to be executed in normal mode
 function! s:Kill(c)
   let l:saved_register = getreg('"')
   execute 'normal! ' . a:c
@@ -243,9 +237,8 @@ function! s:Kill(c)
 endfunction
 
 " set g:killRingSize
-"
-" killRingSize : desired value for g:killRingSize in int
-"
+" params:
+"   killRingSize: desired value for g:killRingSize in int
 function! SetKillRingSize(killRingSize)
   let g:killRingSize = a:killRingSize
   " if s:killRing shrank
@@ -259,13 +252,11 @@ function! SetKillRingSize(killRingSize)
 endfunction
 
 " browse s:killRing
-"
 function! BrowseKillRing()
   echo reverse(s:killRing)
 endfunction
 
 " echo g:killRingSize
-"
 function! GetKillRingSize()
   echo g:killRingSize
 endfunction
