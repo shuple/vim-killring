@@ -115,21 +115,10 @@ endfunction
 "   0: the cursor has moved from the paste point
 "   1: the cursor has not moved from the paste point
 function! s:RequireUndo()
-  let l:cursor = getpos('.')
-  let l:len = s:GetBufLen()
-
-  " set cursor to paste point and move l:len times to the right
-  call setpos('.', s:cursor['normal'])
-  execute 'normal! ' . l:len . 'l'
-
-  " set l:undo to 1 if user did not move the cursor from the paste point,
-  " otherwise, set l:undo to 0
-  let l:undo = l:cursor == getpos('.')
-
-  " restore original paste point
-  call setpos('.', l:cursor)
-
-  return l:undo
+  return exists('s:lastPaste')
+    \ && s:lastPaste['buffer'] == bufnr('%')
+    \ && s:lastPaste['changedtick'] == b:changedtick
+    \ && s:lastPaste['cursor'] == s:cursor['insertLeavePre']
 endfunction
 
 " length of s:killRing[s:offset['pop'] in normal mode
@@ -187,6 +176,17 @@ function! s:Paste()
     \ ? 'a' : 'i'
 
   execute 'normal! g' . l:paste
+
+  " remember the insert-mode position after this paste
+  let s:lastPaste = {
+    \ 'buffer': bufnr('%'),
+    \ 'changedtick': b:changedtick,
+    \ 'cursor': getpos('.')
+    \ }
+  if l:insert == 'a'
+    let s:lastPaste['cursor'][2] += strlen(matchstr(strpart(getline('.'), col('.') - 1), '^.'))
+  endif
+
   call feedkeys(l:insert, 'n')
 endfunction
 
